@@ -2,43 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:ir_explorer/ir/corpus.dart';
 import 'package:ir_explorer/ir/index_builder.dart';
 import 'package:ir_explorer/ir/inverted_index.dart';
-import 'package:ir_explorer/ir/retrieval/retrieval.dart';
+import 'package:ir_explorer/ir/soundex.dart';
 
 void main() {
-  final InvertedIndex index = buildIndex(corpus);
+  final InvertedIndex index = buildIndex(corpusSoundex);
 
-  print('--- Boolean AND ---');
-  print(
-    retrieve(
-      index: index,
-      type: RetrievalType.booleanAnd,
-      query: 'learning project',
-    ),
-  );
+  final soundexIndex = SoundexIndex();
+  soundexIndex.buildFromInvertedIndex(index);
 
-  print('--- Boolean OR ---');
-  print(
-    retrieve(
-      index: index,
-      type: RetrievalType.booleanOr,
-      query: 'search learning',
-    ),
-  );
+  print('--- Soundex Terms ---');
+  print(soundexIndex.searchSimilarTerms('retrievals'));
 
-  print('--- Boolean NOT ---');
-  print(
-    retrieve(
-      index: index,
-      type: RetrievalType.booleanNot,
-      query: 'project',
-      excludeQuery: 'cool',
-    ),
-  );
-
-  print('--- Phrase Query ---');
-  print(
-    retrieve(index: index, type: RetrievalType.phrase, query: 'inverted index'),
-  );
+  print('--- Soundex Docs ---');
+  print(soundexIndex.searchDocsBySoundex(index, 'retrievals'));
 
   runApp(const MainApp());
 }
