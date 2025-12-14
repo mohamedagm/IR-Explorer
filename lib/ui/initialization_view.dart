@@ -18,6 +18,7 @@ class InitializationView extends StatefulWidget {
 class _InitializationViewState extends State<InitializationView> {
   late InvertedIndex index;
   late SoundexIndex soundexIndex;
+  final ScrollController scrollController = ScrollController();
 
   String title = '';
   String description = '';
@@ -169,7 +170,15 @@ class _InitializationViewState extends State<InitializationView> {
         outputLines.add(line);
       });
 
-      await Future.delayed(const Duration(milliseconds: 300));
+      // Auto scroll to bottom
+      await Future.delayed(Duration(milliseconds: 700));
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     }
 
     await Future.delayed(Duration(seconds: waitAfterDone));
@@ -193,23 +202,37 @@ class _InitializationViewState extends State<InitializationView> {
             const SizedBox(height: 16),
             Expanded(
               child: ListView.builder(
+                controller: scrollController,
                 itemCount: outputLines.length,
                 itemBuilder: (context, index) {
                   final line = outputLines[index];
-                  return Card(
-                    color: Colors.black,
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Text(
-                        line,
-                        style: const TextStyle(
-                          color: Colors.greenAccent,
-                          fontFamily: 'monospace',
-                          fontSize: 16,
+                  return TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: 1),
+                    duration: const Duration(milliseconds: 300),
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Card(
+                      color: Colors.black,
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Text(
+                          line,
+                          style: const TextStyle(
+                            color: Colors.greenAccent,
+                            fontFamily: 'monospace',
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
