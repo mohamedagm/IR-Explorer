@@ -21,7 +21,7 @@ class _InitializationViewState extends State<InitializationView> {
 
   String title = '';
   String description = '';
-  String output = '';
+  final List<String> outputLines = [];
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _InitializationViewState extends State<InitializationView> {
     await _scene(
       titleText: 'Reading Documents',
       descriptionText: 'Reading raw documents from the corpus.',
-      seconds: 4,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         corpus.forEach((id, text) {
@@ -43,11 +43,10 @@ class _InitializationViewState extends State<InitializationView> {
       },
     );
 
-    /// 2️⃣ Tokenization
     await _scene(
       titleText: 'Tokenization',
       descriptionText: 'Splitting documents into tokens.',
-      seconds: 3,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         corpus.forEach((id, text) {
@@ -57,11 +56,10 @@ class _InitializationViewState extends State<InitializationView> {
       },
     );
 
-    /// 3️⃣ Stopword Removal
     await _scene(
       titleText: 'Stopword Removal',
       descriptionText: 'Removing common stopwords from tokens.',
-      seconds: 3,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         corpus.forEach((id, text) {
@@ -73,11 +71,10 @@ class _InitializationViewState extends State<InitializationView> {
       },
     );
 
-    /// 4️⃣ Stemming
     await _scene(
       titleText: 'Stemming',
       descriptionText: 'Reducing tokens to their root form.',
-      seconds: 3,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         corpus.forEach((id, text) {
@@ -90,13 +87,12 @@ class _InitializationViewState extends State<InitializationView> {
       },
     );
 
-    /// 5️⃣ Build Indexes
     index = buildIndex(corpus);
 
     await _scene(
       titleText: 'Inverted Index',
       descriptionText: 'Mapping terms to document IDs.',
-      seconds: 4,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         index.postings.forEach((term, docs) {
@@ -109,7 +105,7 @@ class _InitializationViewState extends State<InitializationView> {
     await _scene(
       titleText: 'Positional Index',
       descriptionText: 'Storing term positions inside documents.',
-      seconds: 4,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         index.positional.forEach((term, pos) {
@@ -119,14 +115,13 @@ class _InitializationViewState extends State<InitializationView> {
       },
     );
 
-    /// 6️⃣ Soundex
     soundexIndex = SoundexIndex();
     soundexIndex.buildFromInvertedIndex(index);
 
     await _scene(
       titleText: 'Soundex Index',
       descriptionText: 'Grouping phonetically similar terms.',
-      seconds: 4,
+      waitAfterDone: 1,
       buildOutput: () {
         final b = StringBuffer();
         soundexIndex.codeToTerms.forEach((code, terms) {
@@ -136,11 +131,10 @@ class _InitializationViewState extends State<InitializationView> {
       },
     );
 
-    /// 7️⃣ Ready
     await _scene(
       titleText: 'System Ready',
       descriptionText: 'All preprocessing and indexing steps completed.',
-      seconds: 2,
+      waitAfterDone: 1,
       buildOutput: () => '✔ IR Search Engine is ready.',
     );
 
@@ -155,21 +149,30 @@ class _InitializationViewState extends State<InitializationView> {
     required String titleText,
     required String descriptionText,
     required String Function() buildOutput,
-    required int seconds,
+    required int waitAfterDone,
   }) async {
     setState(() {
       title = titleText;
       description = descriptionText;
-      output = 'Processing...';
+      outputLines.clear();
     });
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(seconds: 1));
 
-    setState(() {
-      output = buildOutput();
-    });
+    final fullOutput = buildOutput();
+    final lines = fullOutput.split('\n');
 
-    await Future.delayed(Duration(seconds: seconds));
+    for (final line in lines) {
+      if (!mounted) return;
+
+      setState(() {
+        outputLines.add(line);
+      });
+
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+
+    await Future.delayed(Duration(seconds: waitAfterDone));
   }
 
   @override
@@ -189,23 +192,29 @@ class _InitializationViewState extends State<InitializationView> {
             Text(description),
             const SizedBox(height: 16),
             Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: SingleChildScrollView(
-                  child: Text(
-                    output,
-                    style: const TextStyle(
-                      color: Colors.greenAccent,
-                      fontFamily: 'monospace',
-                      fontSize: 13,
+              child: ListView.builder(
+                itemCount: outputLines.length,
+                itemBuilder: (context, index) {
+                  final line = outputLines[index];
+                  return Card(
+                    color: Colors.black,
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Text(
+                        line,
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontFamily: 'monospace',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
