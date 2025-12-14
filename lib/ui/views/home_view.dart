@@ -5,8 +5,9 @@ import 'package:ir_explorer/ir/inverted_index.dart';
 import 'package:ir_explorer/ir/retrieval/boolean_retrieval.dart';
 import 'package:ir_explorer/ir/retrieval/phrase_retrieval.dart';
 import 'package:ir_explorer/ir/soundex.dart';
-
-enum SearchMode { booleanAnd, booleanOr, booleanNot, phrase, soundex }
+import 'package:ir_explorer/ui/widgets/drop_down_button.dart';
+import 'package:ir_explorer/ui/widgets/query_result.dart';
+import 'package:ir_explorer/ui/widgets/query_steps.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -19,12 +20,13 @@ class _HomeViewState extends State<HomeView> {
   late InvertedIndex index;
   late SoundexIndex soundexIndex;
 
-  SearchMode mode = SearchMode.booleanAnd;
-
   final queryController = TextEditingController();
   final excludeController = TextEditingController();
-
+  SearchMode mode = SearchMode.booleanAnd;
   Set<int> results = {};
+
+  final List<String> querySteps = [];
+  bool isProcessing = false;
 
   @override
   void initState() {
@@ -34,11 +36,12 @@ class _HomeViewState extends State<HomeView> {
     soundexIndex.buildFromInvertedIndex(index);
   }
 
-  void executeSearch() {
+  Future<void> executeSearch() async {
     final query = queryController.text.trim();
     final exclude = excludeController.text.trim();
-
     if (query.isEmpty) return;
+
+    await runQueryStory(query, exclude);
 
     Set<int> res = {};
 
@@ -46,20 +49,16 @@ class _HomeViewState extends State<HomeView> {
       case SearchMode.booleanAnd:
         res = booleanAndQuery(index, query);
         break;
-
       case SearchMode.booleanOr:
         res = booleanOrQuery(index, query);
         break;
-
       case SearchMode.booleanNot:
         if (exclude.isEmpty) return;
         res = booleanNotQuery(index, query, exclude);
         break;
-
       case SearchMode.phrase:
         res = phraseQuery(index, query);
         break;
-
       case SearchMode.soundex:
         res = soundexIndex.searchDocsBySoundex(index, query);
         break;
@@ -67,7 +66,29 @@ class _HomeViewState extends State<HomeView> {
 
     setState(() {
       results = res;
+      isProcessing = false;
     });
+  }
+
+  Future<void> runQueryStory(String query, String exclude) async {
+    querySteps.clear();
+    setState(() => isProcessing = true);
+
+    Future<void> addStep(String text) async {
+      setState(() => querySteps.add(text));
+      await Future.delayed(const Duration(milliseconds: 400));
+    }
+
+    await addStep('User query: "$query"');
+
+    await addStep('Tokenizing query');
+    final tokens = query.split(' ');
+    await addStep('Tokens: $tokens');
+
+    await addStep('Removing stopwords');
+    await addStep('Applying stemming');
+
+    await addStep('Retrieving matching documents');
   }
 
   @override
@@ -79,34 +100,11 @@ class _HomeViewState extends State<HomeView> {
         child: Column(
           spacing: 16,
           children: [
-            DropdownButton<SearchMode>(
-              value: mode,
-              isExpanded: true,
-              items: const [
-                DropdownMenuItem(
-                  value: SearchMode.booleanAnd,
-                  child: Text('Boolean AND'),
-                ),
-                DropdownMenuItem(
-                  value: SearchMode.booleanOr,
-                  child: Text('Boolean OR'),
-                ),
-                DropdownMenuItem(
-                  value: SearchMode.booleanNot,
-                  child: Text('Boolean NOT'),
-                ),
-                DropdownMenuItem(
-                  value: SearchMode.phrase,
-                  child: Text('Phrase Query'),
-                ),
-                DropdownMenuItem(
-                  value: SearchMode.soundex,
-                  child: Text('Soundex Search'),
-                ),
-              ],
-              onChanged: (value) {
+            SearchModeDropdown(
+              mode: mode,
+              onChanged: (newMode) {
                 setState(() {
-                  mode = value!;
+                  mode = newMode;
                   results.clear();
                 });
               },
@@ -138,20 +136,10 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
 
-            Expanded(
-              child: results.isEmpty
-                  ? const Center(child: Text('No results'))
-                  : ListView(
-                      children: results.map((docId) {
-                        return Card(
-                          child: ListTile(
-                            title: Text('Document $docId'),
-                            subtitle: Text(corpus[docId]!),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-            ),
+            if (isProcessing || querySteps.isNotEmpty)
+              QuerySteps(querySteps: querySteps),
+
+            QueryResult(results: results),
           ],
         ),
       ),

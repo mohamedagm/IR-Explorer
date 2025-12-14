@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ir_explorer/ui/initialization_view.dart';
+import 'package:ir_explorer/ui/views/initialization_view.dart';
 
 void main() {
   runApp(const MainApp());

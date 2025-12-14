@@ -6,7 +6,7 @@ import 'package:ir_explorer/ir/soundex.dart';
 import 'package:ir_explorer/services/stemmer.dart';
 import 'package:ir_explorer/services/stopwords.dart';
 import 'package:ir_explorer/services/tokenizer.dart';
-import 'package:ir_explorer/ui/home_view.dart';
+import 'package:ir_explorer/ui/views/home_view.dart';
 
 class InitializationView extends StatefulWidget {
   const InitializationView({super.key});
