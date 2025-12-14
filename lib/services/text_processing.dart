@@ -7,11 +7,6 @@ List<String> processText(String text, {bool enableStemming = true}) {
   final noStops = removeStopWords(tokens);
   final result = enableStemming ? applyStemming(noStops) : noStops;
 
-  print('RAW TEXT: $text');
-  print('TOKENS: $tokens');
-  print('NO STOPWORDS: $noStops');
-  print('FINAL (AFTER STEMMING): $result');
-  print('-------------------------------');
   return result;
 }
 
