@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ir_explorer/ui/home_view.dart';
+import 'package:ir_explorer/ui/initialization_view.dart';
 
 void main() {
   runApp(const MainApp());
@@ -10,6 +10,6 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: HomeView());
+    return const MaterialApp(home: InitializationView());
   }
 }
