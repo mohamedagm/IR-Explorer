@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ir_explorer/ir/corpus.dart';
+import 'package:ir_explorer/ir/index_builder.dart';
 
 void main() {
+  buildIndex(corpus);
   runApp(const MainApp());
 }
 
