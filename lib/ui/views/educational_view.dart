@@ -8,14 +8,14 @@ import 'package:ir_explorer/services/stopwords.dart';
 import 'package:ir_explorer/services/tokenizer.dart';
 import 'package:ir_explorer/ui/views/home_view.dart';
 
-class InitializationView extends StatefulWidget {
-  const InitializationView({super.key});
+class EducationalView extends StatefulWidget {
+  const EducationalView({super.key});
 
   @override
-  State<InitializationView> createState() => _InitializationViewState();
+  State<EducationalView> createState() => _InitializationViewState();
 }
 
-class _InitializationViewState extends State<InitializationView> {
+class _InitializationViewState extends State<EducationalView> {
   late InvertedIndex index;
   late SoundexIndex soundexIndex;
   final ScrollController scrollController = ScrollController();
@@ -171,7 +171,7 @@ class _InitializationViewState extends State<InitializationView> {
       });
 
       // Auto scroll to bottom
-      await Future.delayed(Duration(milliseconds: 700));
+      await Future.delayed(Duration(milliseconds: 500));
       if (scrollController.hasClients) {
         scrollController.animateTo(
           scrollController.position.maxScrollExtent,
